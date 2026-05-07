@@ -1,0 +1,2815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a1f2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MyPlanner">
+<title>Climate Scholar — Daily Planner</title>
+<link id="pwa-manifest" rel="manifest">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+/* ===== PWA INSTALL BANNER ===== */
+#pwa-install-banner {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: linear-gradient(135deg, #1a1f2e 0%, #222840 100%);
+  border: 1px solid #6ee7b7;
+  border-radius: 14px;
+  padding: 14px 16px;
+  width: calc(100% - 32px);
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(110,231,183,0.1);
+  animation: bannerSlideUp 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+@keyframes bannerSlideUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+#pwa-install-banner .pwa-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+#pwa-install-banner .pwa-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+#pwa-install-banner .pwa-icon canvas { display: block; }
+#pwa-install-banner .pwa-text { flex: 1; min-width: 0; }
+#pwa-install-banner .pwa-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 0.95rem;
+  color: #e8ecf4;
+  line-height: 1.2;
+}
+#pwa-install-banner .pwa-sub {
+  font-size: 0.72rem;
+  color: #9aa3c0;
+  margin-top: 2px;
+  font-family: 'Outfit', sans-serif;
+}
+#pwa-install-banner .pwa-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+#pwa-install-btn {
+  flex: 1;
+  background: #6ee7b7;
+  color: #0f1219;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#pwa-install-btn:hover { background: #34d399; }
+#pwa-dismiss-btn {
+  background: transparent;
+  color: #9aa3c0;
+  border: 1px solid #2e3550;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+#pwa-dismiss-btn:hover { border-color: #9aa3c0; color: #e8ecf4; }
+#pwa-installed-toast {
+  display: none;
+  position: fixed;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: #6ee7b7;
+  color: #0f1219;
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  box-shadow: 0 4px 16px rgba(110,231,183,0.3);
+  animation: toastPop 0.3s ease forwards;
+}
+@keyframes toastPop {
+  from { opacity:0; transform: translateX(-50%) scale(0.85); }
+  to   { opacity:1; transform: translateX(-50%) scale(1); }
+}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #0f1219;
+  --surface: #1a1f2e;
+  --surface2: #222840;
+  --surface3: #2a3050;
+  --border: #2e3550;
+  --border2: #3a4160;
+  --text: #e8ecf4;
+  --text2: #9aa3c0;
+  --text3: #5a6380;
+  --accent: #6ee7b7;
+  --accent2: #34d399;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+  --orange: #fb923c;
+  --pink: #f472b6;
+  --yellow: #fbbf24;
+  --red: #f87171;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===== WHITE FRAME BORDER (visible on phone) ===== */
+#app-frame-border {
+  position: fixed;
+  inset: 0;
+  border: 2.5px solid rgba(255,255,255,0.82);
+  pointer-events: none;
+  z-index: 99999;
+  box-shadow: inset 0 0 18px rgba(255,255,255,0.04);
+}
+
+/* ===== RIPPLE ===== */
+.ripple-wave {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  transform: scale(0);
+  animation: ripple-expand 0.55s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes ripple-expand {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ===== TAP BOUNCE ===== */
+.icon-btn:active, .day-pill:active, .tab:active, .add-block-btn:active {
+  transform: scale(0.93) !important;
+}
+
+/* ===== BLOCK DONE PULSE ===== */
+.block.just-done {
+  box-shadow: 0 0 0 2px var(--accent), 0 4px 20px rgba(110,231,183,0.18) !important;
+  animation: donePulse 0.45s ease forwards;
+}
+@keyframes donePulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.025); }
+  100% { transform: scale(1); }
+}
+
+/* ===== SCROLL PROGRESS BAR ===== */
+#scroll-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, #6ee7b7, #a78bfa);
+  width: 0%;
+  z-index: 99998;
+  transition: width 0.08s linear;
+  pointer-events: none;
+}
+
+/* ===== TOAST ===== */
+#interactive-toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: 20px;
+  padding: 8px 18px;
+  font-size: 0.78rem;
+  font-family: 'Outfit', sans-serif;
+  z-index: 9998;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+#interactive-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+
+/* ===== HEADER ===== */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(15,18,25,0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.app-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.2rem;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.icon-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  border-radius: var(--radius-sm);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.15s;
+}
+.icon-btn:hover { background: var(--surface3); color: var(--text); }
+.icon-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+/* ===== WEEK STRIP ===== */
+.week-strip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.week-strip::-webkit-scrollbar { display: none; }
+
+.day-pill {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  min-width: 48px;
+}
+.day-pill:hover { background: var(--surface2); }
+.day-pill.active {
+  background: var(--accent);
+  color: var(--bg);
+}
+.day-pill.today:not(.active) {
+  border-color: var(--accent);
+}
+.day-pill .day-name {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+}
+.day-pill.active .day-name { opacity: 1; }
+.day-pill .day-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-top: 1px;
+}
+
+/* ===== TABS ===== */
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.tab {
+  flex: 1;
+  padding: 11px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text2);
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  letter-spacing: 0.03em;
+}
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ===== MAIN CONTENT ===== */
+.main { padding: 14px; max-width: 600px; margin: 0 auto; }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ===== DATE LABEL ===== */
+.date-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.date-label-text {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.4rem;
+  color: var(--text);
+}
+.date-label-sub {
+  font-size: 0.75rem;
+  color: var(--text3);
+  font-family: 'DM Mono', monospace;
+}
+
+/* ===== BLOCKS ===== */
+.blocks-list { display: flex; flex-direction: column; gap: 6px; }
+
+.block {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: default;
+  transition: border-color 0.15s, transform 0.1s;
+  user-select: none;
+}
+.block:hover { border-color: var(--border2); }
+.block.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+.block.drag-over { border-color: var(--accent); }
+
+.block-accent {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+}
+
+.block-inner {
+  padding: 10px 12px 10px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.block-drag-handle {
+  color: var(--text3);
+  font-size: 0.8rem;
+  cursor: grab;
+  padding: 2px 0;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.block-drag-handle:active { cursor: grabbing; }
+
+.block-content { flex: 1; min-width: 0; }
+
+.block-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.3;
+}
+.block-time {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text3);
+  margin-top: 3px;
+}
+.block-note {
+  font-size: 0.76rem;
+  color: var(--text2);
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.block-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.block:hover .block-actions { opacity: 1; }
+.block-actions button {
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  padding: 4px 5px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  transition: all 0.12s;
+}
+.block-actions button:hover { background: var(--surface2); color: var(--text); }
+
+/* ===== ADD BLOCK BTN ===== */
+.add-block-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 11px;
+  background: transparent;
+  border: 1px dashed var(--border2);
+  color: var(--text3);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: 'Outfit', sans-serif;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.add-block-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(110,231,183,0.04);
+}
+
+/* ===== REMINDERS PANEL ===== */
+.reminder-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+}
+.reminder-label { font-size: 0.85rem; color: var(--text); }
+.reminder-time { font-family: 'DM Mono', monospace; font-size: 0.78rem; color: var(--text2); }
+
+/* ===== EXPENSE PANEL ===== */
+.expense-summary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.expense-total-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.expense-total-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 2rem;
+  color: var(--accent);
+}
+.expense-total-num span {
+  font-size: 1rem;
+  color: var(--text2);
+  font-family: 'Outfit', sans-serif;
+}
+
+.expense-cats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+.expense-cat {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  text-align: center;
+}
+.expense-cat-icon { font-size: 1.3rem; margin-bottom: 4px; }
+.expense-cat-label { font-size: 0.7rem; color: var(--text3); margin-bottom: 4px; }
+.expense-cat-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border2);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.95rem;
+  text-align: center;
+  padding: 2px 0;
+  outline: none;
+}
+.expense-cat-input:focus { border-bottom-color: var(--accent); }
+
+.expense-log {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.expense-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  gap: 8px;
+}
+.expense-entry-desc {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  outline: none;
+}
+.expense-entry-desc::placeholder { color: var(--text3); }
+.expense-entry-amt {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border2);
+  color: var(--accent);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.9rem;
+  width: 70px;
+  text-align: right;
+  outline: none;
+  padding: 1px 2px;
+}
+.expense-entry-amt:focus { border-bottom-color: var(--accent); }
+.expense-entry-del {
+  background: transparent;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.12s;
+}
+.expense-entry-del:hover { color: var(--red); background: rgba(248,113,113,0.1); }
+
+.expense-weekly {
+  margin-top: 16px;
+}
+.section-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.weekly-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.weekly-bar-day {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text3);
+  width: 30px;
+}
+.weekly-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--surface2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.weekly-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+.weekly-bar-amt {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text2);
+  width: 55px;
+  text-align: right;
+}
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px 32px;
+  width: 100%;
+  max-width: 600px;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(60px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-group { margin-bottom: 13px; }
+.form-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text3);
+  font-weight: 600;
+  margin-bottom: 5px;
+  display: block;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--accent);
+}
+.form-select option { background: var(--surface); }
+.form-textarea { resize: vertical; min-height: 60px; }
+
+.time-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.color-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.color-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.12s;
+}
+.color-dot.selected { border-color: white; transform: scale(1.15); }
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+.btn {
+  flex: 1;
+  padding: 11px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.btn-primary { background: var(--accent); color: var(--bg); }
+.btn-primary:hover { background: var(--accent2); }
+.btn-secondary { background: var(--surface2); color: var(--text2); border: 1px solid var(--border2); }
+.btn-secondary:hover { color: var(--text); border-color: var(--border); }
+.btn-danger { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 10px 18px;
+  border-radius: 100px;
+  font-size: 0.82rem;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 300;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ===== SETTINGS PANEL ===== */
+.settings-section { margin-bottom: 20px; }
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+}
+.settings-row-label { font-size: 0.88rem; color: var(--text); }
+.settings-row-sub { font-size: 0.72rem; color: var(--text3); margin-top: 2px; }
+
+.toggle {
+  width: 44px;
+  height: 24px;
+  background: var(--surface3);
+  border-radius: 12px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  border: none;
+}
+.toggle.on { background: var(--accent); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: white;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: left 0.2s;
+}
+.toggle.on::after { left: 23px; }
+
+.settings-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.15s;
+}
+.settings-btn:hover { border-color: var(--border2); color: var(--text); background: var(--surface2); }
+
+/* ===== BOTTOM NAV ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0; right: 0;
+  background: rgba(15,18,25,0.95);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  display: flex;
+  z-index: 100;
+  height: 60px;
+}
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--text3);
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  transition: color 0.15s;
+}
+.nav-btn.active { color: var(--accent); }
+.nav-btn svg { width: 20px; height: 20px; }
+
+.pb-nav { padding-bottom: 68px; }
+
+/* ===== CATEGORY CHIPS ===== */
+.cat-filter {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: 12px;
+}
+.cat-filter::-webkit-scrollbar { display: none; }
+.cat-chip {
+  flex: 0 0 auto;
+  padding: 5px 11px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  font-size: 0.72rem;
+  cursor: pointer;
+  color: var(--text2);
+  transition: all 0.12s;
+  background: transparent;
+}
+.cat-chip.active, .cat-chip:hover {
+  border-color: currentColor;
+}
+
+/* ===== DIVIDER ===== */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text3);
+  font-size: 0.85rem;
+}
+.empty-state .empty-icon { font-size: 2rem; margin-bottom: 8px; }
+
+/* Reminder badge */
+.has-reminder::after {
+  content: '🔔';
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 0.65rem;
+}
+
+/* ===== STATS ===== */
+.stat-range-btn {
+  padding: 5px 11px;
+  border-radius: 100px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text2);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.stat-range-btn.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.stat-card-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text3);
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.stat-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.stat-kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+.stat-kpi-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text3);
+  margin-bottom: 5px;
+}
+.stat-kpi-value {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.5rem;
+  color: var(--text);
+  line-height: 1;
+}
+.stat-kpi-sub {
+  font-size: 0.68rem;
+  color: var(--text3);
+  margin-top: 3px;
+  font-family: 'DM Mono', monospace;
+}
+.stat-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.stat-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: var(--text2);
+}
+.stat-legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+/* Heatmap */
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: 28px repeat(7, 1fr);
+  gap: 3px;
+  margin-top: 6px;
+}
+.heatmap-day-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 4px;
+}
+.heatmap-col-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text3);
+  text-align: center;
+  margin-bottom: 2px;
+}
+.heatmap-cell {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--surface2);
+  cursor: default;
+  transition: opacity 0.12s;
+}
+.heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 0.65rem;
+  color: var(--text3);
+  font-family: 'DM Mono', monospace;
+}
+.heatmap-legend-cells {
+  display: flex;
+  gap: 2px;
+}
+.heatmap-legend-cell {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+/* ===== DONE STATE ===== */
+.block.done {
+  opacity: 0.55;
+}
+.block.done .block-label {
+  text-decoration: line-through;
+  color: var(--text3);
+}
+.block.done .block-accent {
+  filter: grayscale(0.6);
+}
+.block-done-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: transparent;
+  transition: all 0.15s;
+  margin-top: 1px;
+}
+.block-done-btn:hover {
+  border-color: var(--accent);
+}
+.block-done-btn.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+/* Day completion bar */
+.day-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.day-progress-track {
+  flex: 1;
+  height: 4px;
+  background: var(--surface2);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.day-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+.day-progress-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text3);
+  white-space: nowrap;
+}
+
+/* Stats completion card */
+.stat-completion-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+.stat-completion-day {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text3);
+  width: 28px;
+}
+.stat-completion-track {
+  flex: 1;
+  height: 7px;
+  background: var(--surface2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.stat-completion-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.stat-completion-pct {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text2);
+  width: 38px;
+  text-align: right;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- White frame border overlay — always on top, visible on phone -->
+<div id="app-frame-border"></div>
+<!-- Scroll progress bar -->
+<div id="scroll-progress"></div>
+<!-- Interactive feedback toast -->
+<div id="interactive-toast"></div>
+
+<!-- PWA Install Banner -->
+<div id="pwa-install-banner">
+  <div class="pwa-banner-inner">
+    <div class="pwa-icon"><canvas id="pwa-banner-icon" width="44" height="44"></canvas></div>
+    <div class="pwa-text">
+      <div class="pwa-title">Install MyPlanner</div>
+      <div class="pwa-sub">Add to Home Screen — works offline</div>
+    </div>
+  </div>
+  <div class="pwa-btns">
+    <button id="pwa-install-btn">⬇ Add to Home Screen</button>
+    <button id="pwa-dismiss-btn">Not now</button>
+  </div>
+</div>
+<div id="pwa-installed-toast">✓ Added to Home Screen!</div>
+
+<!-- APP HEADER -->
+<header class="app-header">
+  <div class="header-top">
+    <div class="app-title">◈ Climate Planner</div>
+    <div class="header-actions">
+      <button class="icon-btn" id="notifBtn" title="Notifications" onclick="toggleNotifications()">🔔</button>
+      <button class="icon-btn" id="exportBtn" title="Export JSON" onclick="exportData()">⬇</button>
+    </div>
+  </div>
+  <div class="week-strip" id="weekStrip"></div>
+</header>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <div class="tab active" onclick="switchTab('schedule')">Schedule</div>
+  <div class="tab" onclick="switchTab('expenses')">Expenses</div>
+  <div class="tab" onclick="switchTab('stats')">Stats</div>
+  <div class="tab" onclick="switchTab('reminders')">Reminders</div>
+  <div class="tab" onclick="switchTab('settings')">Settings</div>
+</div>
+
+<!-- MAIN -->
+<div class="main pb-nav">
+
+  <!-- SCHEDULE TAB -->
+  <div class="tab-panel active" id="tab-schedule">
+    <div class="date-label">
+      <div>
+        <div class="date-label-text" id="selectedDateLabel">Monday</div>
+        <div class="date-label-sub" id="selectedDateSub"></div>
+      </div>
+      <button class="icon-btn" onclick="openBlockModal()" title="Add block">＋</button>
+    </div>
+
+    <div class="blocks-list" id="blocksList"></div>
+    <div class="day-progress" id="dayProgress" style="display:none">
+      <div class="day-progress-track"><div class="day-progress-fill" id="dayProgressFill"></div></div>
+      <div class="day-progress-label" id="dayProgressLabel"></div>
+    </div>
+    <button class="add-block-btn" onclick="openBlockModal()">＋ Add time block</button>
+  </div>
+
+  <!-- EXPENSES TAB -->
+  <div class="tab-panel" id="tab-expenses">
+    <div class="date-label">
+      <div>
+        <div class="date-label-text" id="expDateLabel">Expenses</div>
+        <div class="date-label-sub" id="expDateSub"></div>
+      </div>
+    </div>
+
+    <div class="expense-summary">
+      <div class="expense-total-label">Total Today</div>
+      <div class="expense-total-num" id="expTotalNum">₹0 <span>/ day</span></div>
+      <div class="expense-cats">
+        <div class="expense-cat">
+          <div class="expense-cat-icon">🍱</div>
+          <div class="expense-cat-label">Food</div>
+          <input class="expense-cat-input" type="number" id="catFood" placeholder="0" min="0" oninput="updateCatExpense('food', this.value)">
+        </div>
+        <div class="expense-cat">
+          <div class="expense-cat-icon">🚬</div>
+          <div class="expense-cat-label">Cigarettes</div>
+          <input class="expense-cat-input" type="number" id="catCig" placeholder="0" min="0" oninput="updateCatExpense('cig', this.value)">
+        </div>
+        <div class="expense-cat">
+          <div class="expense-cat-icon">📦</div>
+          <div class="expense-cat-label">Misc</div>
+          <input class="expense-cat-input" type="number" id="catMisc" placeholder="0" min="0" oninput="updateCatExpense('misc', this.value)">
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title">Log entries</div>
+    <div id="expenseLogList" class="expense-log"></div>
+    <button class="add-block-btn" onclick="addExpenseEntry()">＋ Add expense entry</button>
+
+    <div class="divider"></div>
+    <div class="expense-weekly">
+      <div class="section-title">This week</div>
+      <div id="weeklyBars"></div>
+    </div>
+  </div>
+
+  <!-- REMINDERS TAB -->
+  <div class="tab-panel" id="tab-reminders">
+    <div class="date-label">
+      <div>
+        <div class="date-label-text">Reminders</div>
+        <div class="date-label-sub">Notification-based alarms</div>
+      </div>
+    </div>
+
+    <div class="section-title">Quick reminders for today</div>
+    <div id="remindersList"></div>
+    <button class="add-block-btn" onclick="openReminderModal()">＋ Add reminder</button>
+
+    <div class="divider"></div>
+    <div class="section-title">Study & wind-down nudges</div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-row-label">Study block reminder</div>
+        <div class="settings-row-sub">10 min before each study block</div>
+      </div>
+      <button class="toggle" id="studyToggle" onclick="toggleSetting('studyReminders', this)"></button>
+    </div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-row-label">Evening wind-down nudge</div>
+        <div class="settings-row-sub">Daily at 10:00 PM</div>
+      </div>
+      <button class="toggle" id="windDownToggle" onclick="toggleSetting('windDown', this)"></button>
+    </div>
+    <div class="settings-row">
+      <div>
+        <div class="settings-row-label">Bus departure alert</div>
+        <div class="settings-row-sub">15 min before bus time</div>
+      </div>
+      <button class="toggle" id="busToggle" onclick="toggleSetting('busAlerts', this)"></button>
+    </div>
+
+    <div class="divider"></div>
+    <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; font-size: 0.78rem; color: var(--text2); line-height: 1.6;">
+      ⚠️ Reminders use browser Web Notifications. Allow notifications when prompted. They work as long as the browser tab is open (or the PWA is added to home screen on iOS/Android).
+    </div>
+  </div>
+
+  <!-- STATS TAB -->
+  <div class="tab-panel" id="tab-stats">
+
+    <!-- Range selector -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-top:2px">
+      <div class="date-label-text" style="font-family:'DM Serif Display',serif;font-size:1.2rem">Dashboard</div>
+      <div style="display:flex;gap:6px">
+        <button class="stat-range-btn active" data-range="7" onclick="setStatRange(7,this)">7d</button>
+        <button class="stat-range-btn" data-range="14" onclick="setStatRange(14,this)">14d</button>
+        <button class="stat-range-btn" data-range="30" onclick="setStatRange(30,this)">30d</button>
+      </div>
+    </div>
+
+    <!-- KPI row -->
+    <div class="stat-kpi-grid" id="statKpiGrid"></div>
+
+    <!-- Study hours chart -->
+    <div class="stat-card">
+      <div class="stat-card-title">Study hours per day (completed)</div>
+      <div id="statStudyLegend" class="stat-legend"></div>
+      <div style="position:relative;width:100%;height:160px"><canvas id="chartStudy" role="img" aria-label="Daily study hours bar chart"></canvas></div>
+    </div>
+
+    <!-- Spend chart -->
+    <div class="stat-card">
+      <div class="stat-card-title">Daily spend (₹)</div>
+      <div style="position:relative;width:100%;height:140px"><canvas id="chartSpend" role="img" aria-label="Daily spending line chart"></canvas></div>
+    </div>
+
+    <!-- Completion rate chart -->
+    <div class="stat-card">
+      <div class="stat-card-title">Daily completion rate</div>
+      <div id="statCompletionBars"></div>
+    </div>
+
+    <!-- Category breakdown -->
+    <div class="stat-card">
+      <div class="stat-card-title">Time by category</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
+        <div style="position:relative;width:100%;height:160px"><canvas id="chartCat" role="img" aria-label="Donut chart of time by category"></canvas></div>
+        <div id="statCatLegend" class="stat-legend" style="flex-direction:column"></div>
+      </div>
+    </div>
+
+    <!-- Expense split -->
+    <div class="stat-card">
+      <div class="stat-card-title">Expense split</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center">
+        <div style="position:relative;width:100%;height:160px"><canvas id="chartExpCat" role="img" aria-label="Donut chart of expense categories"></canvas></div>
+        <div id="statExpLegend" class="stat-legend" style="flex-direction:column"></div>
+      </div>
+    </div>
+
+    <!-- Campus days heatmap -->
+    <div class="stat-card">
+      <div class="stat-card-title">Activity heatmap (last 4 weeks)</div>
+      <div id="statHeatmap"></div>
+    </div>
+
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div class="tab-panel" id="tab-settings">
+    <div class="date-label">
+      <div>
+        <div class="date-label-text">Settings</div>
+        <div class="date-label-sub">Planner configuration</div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">Data</div>
+      <button class="settings-btn" onclick="exportData()">⬇ Export all data as JSON</button>
+      <button class="settings-btn" onclick="importData()">⬆ Import JSON backup</button>
+      <button class="settings-btn" onclick="resetToTemplates()">🔄 Reset this week to templates</button>
+      <button class="settings-btn" onclick="if(confirm('Delete ALL data? This cannot be undone.')) clearAll()">🗑 Clear all data</button>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">Add to Home Screen</div>
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; font-size: 0.8rem; color: var(--text2); line-height: 1.8;">
+        <strong style="color: var(--text);">iOS Safari:</strong> Tap Share → "Add to Home Screen"<br>
+        <strong style="color: var(--text);">Android Chrome:</strong> Tap ⋮ → "Add to Home Screen"<br>
+        This saves the HTML file locally so it works offline.
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">About</div>
+      <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; font-size: 0.78rem; color: var(--text3); line-height: 1.7;">
+        Climate Scholar Planner v1.0<br>
+        All data stored locally in your browser.<br>
+        No server. No account. No tracking.
+      </div>
+    </div>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+  </div>
+
+</div>
+
+<!-- BLOCK MODAL -->
+<div class="modal-overlay" id="blockModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="blockModalTitle">New Block</span>
+      <button onclick="closeBlockModal()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.2rem">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Label</label>
+      <input class="form-input" id="blockLabel" placeholder="e.g. Literature Review — Dissertation" maxlength="80">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Time range</label>
+      <div class="time-row">
+        <input class="form-input" id="blockStart" type="time">
+        <input class="form-input" id="blockEnd" type="time">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <select class="form-select" id="blockCategory">
+        <option value="class">🎓 Class</option>
+        <option value="study">📚 Study / Review</option>
+        <option value="commute">🚌 Commute / Bus</option>
+        <option value="meal">🍱 Meal</option>
+        <option value="admin">📋 Admin / Office hours</option>
+        <option value="practica">🌍 Practica / Field</option>
+        <option value="free">☀️ Free time</option>
+        <option value="sleep">💤 Sleep / Rest</option>
+        <option value="other">◇ Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note (optional)</label>
+      <textarea class="form-textarea" id="blockNote" placeholder="Any notes, location, reading list..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Color</label>
+      <div class="color-picker" id="colorPicker">
+        <div class="color-dot selected" style="background:#6ee7b7" data-color="#6ee7b7" onclick="selectColor(this)"></div>
+        <div class="color-dot" style="background:#60a5fa" data-color="#60a5fa" onclick="selectColor(this)"></div>
+        <div class="color-dot" style="background:#a78bfa" data-color="#a78bfa" onclick="selectColor(this)"></div>
+        <div class="color-dot" style="background:#fb923c" data-color="#fb923c" onclick="selectColor(this)"></div>
+        <div class="color-dot" style="background:#f472b6" data-color="#f472b6" onclick="selectColor(this)"></div>
+        <div class="color-dot" style="background:#fbbf24" data-color="#fbbf24" onclick="selectColor(this)"></div>
+        <div class="color-dot" style="background:#f87171" data-color="#f87171" onclick="selectColor(this)"></div>
+        <div class="color-dot" style="background:#94a3b8" data-color="#94a3b8" onclick="selectColor(this)"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="blockDeleteBtn" onclick="deleteCurrentBlock()" style="display:none">Delete</button>
+      <button class="btn btn-secondary" onclick="closeBlockModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBlock()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- REMINDER MODAL -->
+<div class="modal-overlay" id="reminderModal">
+  <div class="modal">
+    <div class="modal-title">
+      <span>Add Reminder</span>
+      <button onclick="closeReminderModal()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.2rem">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Label</label>
+      <input class="form-input" id="reminderLabel" placeholder="e.g. Check bus app" maxlength="60">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Time</label>
+      <input class="form-input" id="reminderTime" type="time">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeReminderModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveReminder()">Set Reminder</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== STATE =====================
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAY_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const CAT_COLORS = {
+  class: '#60a5fa', study: '#6ee7b7', commute: '#fb923c',
+  meal: '#fbbf24', admin: '#a78bfa', practica: '#f472b6',
+  free: '#94a3b8', sleep: '#818cf8', other: '#6ee7b7'
+};
+
+let selectedDate = todayKey();
+let editingBlockId = null;
+let editingBlockDate = null;
+let dragSrcId = null;
+
+// ===================== STORAGE =====================
+function getStorage() {
+  try { return JSON.parse(localStorage.getItem('climatePlanner') || '{}'); } catch { return {}; }
+}
+function saveStorage(data) {
+  localStorage.setItem('climatePlanner', JSON.stringify(data));
+}
+function getDay(dateKey) {
+  const s = getStorage();
+  if (!s.days) s.days = {};
+  if (!s.days[dateKey]) s.days[dateKey] = { blocks: [], expenses: { food: 0, cig: 0, misc: 0, entries: [] } };
+  return s.days[dateKey];
+}
+function saveDay(dateKey, dayData) {
+  const s = getStorage();
+  if (!s.days) s.days = {};
+  s.days[dateKey] = dayData;
+  saveStorage(s);
+}
+function getSettings() {
+  const s = getStorage();
+  return s.settings || { studyReminders: false, windDown: false, busAlerts: false, notifGranted: false };
+}
+function saveSettings(settings) {
+  const s = getStorage();
+  s.settings = settings;
+  saveStorage(s);
+}
+function todayKey() {
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+function dateKeyToDate(key) {
+  return new Date(key + 'T00:00:00');
+}
+function dateKeyDow(key) {
+  return dateKeyToDate(key).getDay();
+}
+
+// ===================== TEMPLATES =====================
+const TEMPLATES = {
+  1: [ // Monday
+    {id:'t1', label:'Morning routine & breakfast', start:'07:00', end:'08:00', color:'#fbbf24', category:'meal', note:''},
+    {id:'t2', label:'Bus to Campus 1', start:'08:15', end:'08:45', color:'#fb923c', category:'commute', note:'Bus departs 8:15 AM'},
+    {id:'t3', label:'Morning classes', start:'09:30', end:'12:30', color:'#60a5fa', category:'class', note:'Campus 1 — check timetable'},
+    {id:'t4', label:'Lunch', start:'12:45', end:'13:45', color:'#fbbf24', category:'meal', note:'Campus cafeteria'},
+    {id:'t5', label:'Afternoon classes', start:'14:00', end:'16:00', color:'#60a5fa', category:'class', note:''},
+    {id:'t6', label:'Study / Literature review', start:'16:15', end:'18:15', color:'#6ee7b7', category:'study', note:'Climate adaptation or mitigation readings'},
+    {id:'t7', label:'Bus back to hostel', start:'18:30', end:'19:30', color:'#fb923c', category:'commute', note:'6:30 or 7:00 PM bus (~40–60 min ride)'},
+    {id:'t8', label:'Evening study / dissertation LR', start:'20:00', end:'22:00', color:'#a78bfa', category:'study', note:'Dissertation literature review'},
+  ],
+  2: [ // Tuesday
+    {id:'t1', label:'Morning routine & breakfast', start:'06:15', end:'07:00', color:'#fbbf24', category:'meal', note:'Early start for Campus 2'},
+    {id:'t2', label:'Bus to Campus 2', start:'07:15', end:'08:30', color:'#fb923c', category:'commute', note:'Bus departs 7:15 AM — don\'t miss it!'},
+    {id:'t3', label:'Classes / activities at Campus 2', start:'09:00', end:'17:00', color:'#60a5fa', category:'class', note:'Full day at Campus 2'},
+    {id:'t4', label:'Travel back to hostel', start:'17:30', end:'20:30', color:'#fb923c', category:'commute', note:'Extra bus available — return ~8:30 PM'},
+    {id:'t5', label:'Wind-down / light reading', start:'21:00', end:'22:00', color:'#94a3b8', category:'free', note:'Geopolitics & climate discourse'},
+  ],
+  3: [ // Wednesday
+    {id:'t1', label:'Morning routine & breakfast', start:'07:00', end:'08:00', color:'#fbbf24', category:'meal', note:''},
+    {id:'t2', label:'Bus to Campus 1', start:'08:15', end:'08:45', color:'#fb923c', category:'commute', note:''},
+    {id:'t3', label:'Morning classes', start:'09:30', end:'12:30', color:'#60a5fa', category:'class', note:'Campus 1'},
+    {id:'t4', label:'Lunch', start:'12:45', end:'13:45', color:'#fbbf24', category:'meal', note:''},
+    {id:'t5', label:'Office hours / Admin', start:'14:00', end:'16:30', color:'#a78bfa', category:'admin', note:'Free afternoon — office hours, advisor meetings'},
+    {id:'t6', label:'Deep study block — Climate Science', start:'16:30', end:'18:30', color:'#6ee7b7', category:'study', note:'Climate science coursework & readings'},
+    {id:'t7', label:'Bus back to hostel', start:'18:30', end:'19:30', color:'#fb923c', category:'commute', note:'6:30 or 7:00 PM bus'},
+    {id:'t8', label:'Dissertation literature review', start:'20:00', end:'22:00', color:'#a78bfa', category:'study', note:'Evening deep work session'},
+  ],
+  4: [ // Thursday
+    {id:'t1', label:'Morning routine & breakfast', start:'07:00', end:'08:00', color:'#fbbf24', category:'meal', note:''},
+    {id:'t2', label:'Bus to Campus 1', start:'08:15', end:'08:45', color:'#fb923c', category:'commute', note:''},
+    {id:'t3', label:'Morning classes', start:'09:30', end:'12:30', color:'#60a5fa', category:'class', note:''},
+    {id:'t4', label:'Lunch', start:'12:45', end:'13:45', color:'#fbbf24', category:'meal', note:''},
+    {id:'t5', label:'Afternoon classes', start:'14:00', end:'16:00', color:'#60a5fa', category:'class', note:''},
+    {id:'t6', label:'Study — Build Materials + Mitigation', start:'16:15', end:'18:15', color:'#6ee7b7', category:'study', note:'Build materials coursework'},
+    {id:'t7', label:'Bus back to hostel', start:'18:30', end:'19:30', color:'#fb923c', category:'commute', note:''},
+    {id:'t8', label:'Climate discourse & geopolitics reading', start:'20:00', end:'21:30', color:'#f472b6', category:'study', note:'Current events, UNFCCC updates, policy'},
+  ],
+  5: [ // Friday — Practica day
+    {id:'t1', label:'Morning routine & breakfast', start:'07:00', end:'08:00', color:'#fbbf24', category:'meal', note:''},
+    {id:'t2', label:'Bus to Campus 1', start:'08:15', end:'08:45', color:'#fb923c', category:'commute', note:''},
+    {id:'t3', label:'Practica / Field day', start:'09:00', end:'17:00', color:'#f472b6', category:'practica', note:'Field day — bring notebook, equipment'},
+    {id:'t4', label:'Practica literature review prep', start:'17:00', end:'18:30', color:'#6ee7b7', category:'study', note:'Prep LR for next practica'},
+    {id:'t5', label:'Bus back to hostel', start:'18:30', end:'20:30', color:'#fb923c', category:'commute', note:'8:30 PM bus available on Fridays'},
+    {id:'t6', label:'Review + weekly wrap', start:'21:00', end:'22:00', color:'#94a3b8', category:'free', note:'Review week, plan weekend study'},
+  ],
+  6: [ // Saturday
+    {id:'t1', label:'Morning routine', start:'08:00', end:'09:00', color:'#fbbf24', category:'meal', note:''},
+    {id:'t2', label:'Study block — Dissertation', start:'09:30', end:'12:30', color:'#a78bfa', category:'study', note:'Main dissertation work session'},
+    {id:'t3', label:'Lunch break', start:'12:30', end:'13:30', color:'#fbbf24', category:'meal', note:''},
+    {id:'t4', label:'Climate adaptation readings', start:'14:00', end:'16:00', color:'#6ee7b7', category:'study', note:'Course readings catch-up'},
+    {id:'t5', label:'Free / Events', start:'17:00', end:'20:00', color:'#94a3b8', category:'free', note:'Keep open for events & social'},
+    {id:'t6', label:'Light reading / geopolitics', start:'20:00', end:'21:30', color:'#f472b6', category:'study', note:'Climate news, policy updates'},
+  ],
+  0: [ // Sunday
+    {id:'t1', label:'Slow morning', start:'09:00', end:'10:30', color:'#fbbf24', category:'free', note:'Rest, breakfast'},
+    {id:'t2', label:'Weekly planning session', start:'10:30', end:'11:30', color:'#94a3b8', category:'admin', note:'Plan the coming week, set goals'},
+    {id:'t3', label:'Study — Build Materials', start:'12:00', end:'14:00', color:'#6ee7b7', category:'study', note:''},
+    {id:'t4', label:'Lunch', start:'14:00', end:'15:00', color:'#fbbf24', category:'meal', note:''},
+    {id:'t5', label:'Dissertation / LR', start:'15:30', end:'18:00', color:'#a78bfa', category:'study', note:''},
+    {id:'t6', label:'Free / Events / Rest', start:'18:00', end:'21:00', color:'#94a3b8', category:'free', note:'Keep open for events'},
+    {id:'t7', label:'Prep for Monday', start:'21:00', end:'22:00', color:'#60a5fa', category:'admin', note:'Pack bag, check schedule, light review'},
+  ]
+};
+
+function getTemplateForDate(dateKey) {
+  const dow = dateKeyDow(dateKey);
+  const template = TEMPLATES[dow] || [];
+  return template.map((b,i) => ({
+    ...b,
+    id: dateKey + '-' + i + '-' + Math.random().toString(36).slice(2,6)
+  }));
+}
+
+function ensureDayBlocks(dateKey) {
+  const day = getDay(dateKey);
+  if (!day.blocks || day.blocks.length === 0) {
+    day.blocks = getTemplateForDate(dateKey);
+    saveDay(dateKey, day);
+  }
+  return day;
+}
+
+// ===================== WEEK STRIP =====================
+function buildWeekStrip() {
+  const strip = document.getElementById('weekStrip');
+  strip.innerHTML = '';
+  const today = new Date();
+  // show 14 days: 3 back, today, 10 forward
+  const startOffset = -3;
+  for (let i = startOffset; i <= 10; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const key = d.toISOString().slice(0,10);
+    const isToday = key === todayKey();
+    const isActive = key === selectedDate;
+    const pill = document.createElement('div');
+    pill.className = 'day-pill' + (isActive ? ' active' : '') + (isToday ? ' today' : '');
+    pill.innerHTML = `<span class="day-name">${DAYS[d.getDay()]}</span><span class="day-num">${d.getDate()}</span>`;
+    pill.onclick = () => selectDate(key);
+    strip.appendChild(pill);
+    if (isActive) setTimeout(() => pill.scrollIntoView({inline:'center', behavior:'smooth'}), 50);
+  }
+}
+
+function selectDate(key) {
+  selectedDate = key;
+  buildWeekStrip();
+  renderSchedule();
+  renderExpenses();
+}
+
+// ===================== SCHEDULE RENDER =====================
+function renderSchedule() {
+  const d = dateKeyToDate(selectedDate);
+  document.getElementById('selectedDateLabel').textContent = DAY_FULL[d.getDay()] + ', ' + d.toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric'});
+  document.getElementById('selectedDateSub').textContent = selectedDate === todayKey() ? 'Today' : '';
+
+  const day = ensureDayBlocks(selectedDate);
+  const list = document.getElementById('blocksList');
+  list.innerHTML = '';
+
+  if (!day.blocks.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>No blocks yet. Add one below.</div>';
+    return;
+  }
+
+  day.blocks.forEach((block, idx) => {
+    const el = document.createElement('div');
+    const isDone = !!block.done;
+    el.className = 'block' + (isDone ? ' done' : '');
+    el.draggable = true;
+    el.dataset.id = block.id;
+    el.dataset.idx = idx;
+
+    el.innerHTML = `
+      <div class="block-accent" style="background:${block.color || '#6ee7b7'}"></div>
+      <div class="block-inner">
+        <div class="block-drag-handle" title="Drag to reorder">⠿</div>
+        <div class="block-content">
+          <div class="block-label">${escHtml(block.label)}</div>
+          <div class="block-time">🕐 ${block.start || '—'} – ${block.end || '—'}</div>
+          ${block.note ? `<div class="block-note">${escHtml(block.note)}</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <button class="block-done-btn ${isDone ? 'checked' : ''}" title="${isDone ? 'Mark undone' : 'Mark done'}" onclick="toggleBlockDone('${block.id}')">${isDone ? '✓' : ''}</button>
+          <div class="block-actions" style="opacity:1">
+            <button title="Edit" onclick="openBlockModal('${block.id}')">✎</button>
+          </div>
+        </div>
+      </div>`;
+
+    // Drag events
+    el.addEventListener('dragstart', e => { dragSrcId = block.id; el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+    el.addEventListener('dragend', () => { el.classList.remove('dragging'); document.querySelectorAll('.block').forEach(b => b.classList.remove('drag-over')); });
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+    el.addEventListener('drop', e => { e.preventDefault(); el.classList.remove('drag-over'); if (dragSrcId && dragSrcId !== block.id) reorderBlocks(dragSrcId, block.id); });
+
+    list.appendChild(el);
+  });
+
+  // Update progress bar
+  updateDayProgress(day.blocks);
+}
+
+function toggleBlockDone(blockId) {
+  const day = getDay(selectedDate);
+  const block = day.blocks.find(b => b.id === blockId);
+  if (!block) return;
+  block.done = !block.done;
+  saveDay(selectedDate, day);
+  renderSchedule();
+  if (document.getElementById('tab-stats').classList.contains('active')) renderStats();
+}
+
+function updateDayProgress(blocks) {
+  const prog = document.getElementById('dayProgress');
+  const fill = document.getElementById('dayProgressFill');
+  const label = document.getElementById('dayProgressLabel');
+  if (!blocks || !blocks.length) { prog.style.display = 'none'; return; }
+  const total = blocks.length;
+  const done = blocks.filter(b => b.done).length;
+  const pct = Math.round((done / total) * 100);
+  prog.style.display = 'flex';
+  fill.style.width = pct + '%';
+  label.textContent = done + '/' + total + ' done (' + pct + '%)';
+}
+
+function reorderBlocks(srcId, targetId) {
+  const day = getDay(selectedDate);
+  const blocks = day.blocks;
+  const srcIdx = blocks.findIndex(b => b.id === srcId);
+  const targetIdx = blocks.findIndex(b => b.id === targetId);
+  if (srcIdx < 0 || targetIdx < 0) return;
+  const [moved] = blocks.splice(srcIdx, 1);
+  blocks.splice(targetIdx, 0, moved);
+  saveDay(selectedDate, day);
+  renderSchedule();
+  showToast('Reordered ✓');
+}
+
+// ===================== BLOCK MODAL =====================
+let selectedColor = '#6ee7b7';
+
+function openBlockModal(blockId) {
+  editingBlockId = blockId || null;
+  editingBlockDate = selectedDate;
+  document.getElementById('blockModalTitle').textContent = blockId ? 'Edit Block' : 'New Block';
+  document.getElementById('blockDeleteBtn').style.display = blockId ? 'flex' : 'none';
+
+  if (blockId) {
+    const day = getDay(selectedDate);
+    const block = day.blocks.find(b => b.id === blockId);
+    if (!block) return;
+    document.getElementById('blockLabel').value = block.label || '';
+    document.getElementById('blockStart').value = block.start || '';
+    document.getElementById('blockEnd').value = block.end || '';
+    document.getElementById('blockCategory').value = block.category || 'other';
+    document.getElementById('blockNote').value = block.note || '';
+    selectedColor = block.color || '#6ee7b7';
+  } else {
+    document.getElementById('blockLabel').value = '';
+    document.getElementById('blockStart').value = '';
+    document.getElementById('blockEnd').value = '';
+    document.getElementById('blockCategory').value = 'study';
+    document.getElementById('blockNote').value = '';
+    selectedColor = '#6ee7b7';
+  }
+
+  document.querySelectorAll('.color-dot').forEach(d => {
+    d.classList.toggle('selected', d.dataset.color === selectedColor);
+  });
+
+  document.getElementById('blockModal').classList.add('open');
+  document.getElementById('blockLabel').focus();
+}
+
+function closeBlockModal() {
+  document.getElementById('blockModal').classList.remove('open');
+  editingBlockId = null;
+}
+
+function selectColor(el) {
+  selectedColor = el.dataset.color;
+  document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function saveBlock() {
+  const label = document.getElementById('blockLabel').value.trim();
+  if (!label) { showToast('Please add a label'); return; }
+
+  const block = {
+    label,
+    start: document.getElementById('blockStart').value,
+    end: document.getElementById('blockEnd').value,
+    category: document.getElementById('blockCategory').value,
+    note: document.getElementById('blockNote').value.trim(),
+    color: selectedColor,
+  };
+
+  const day = getDay(editingBlockDate || selectedDate);
+
+  if (editingBlockId) {
+    const idx = day.blocks.findIndex(b => b.id === editingBlockId);
+    if (idx >= 0) { day.blocks[idx] = { ...day.blocks[idx], ...block }; }
+  } else {
+    block.id = selectedDate + '-' + Date.now();
+    day.blocks.push(block);
+  }
+
+  saveDay(editingBlockDate || selectedDate, day);
+  closeBlockModal();
+  renderSchedule();
+  scheduleStudyReminders();
+  showToast(editingBlockId ? 'Block updated ✓' : 'Block added ✓');
+}
+
+function deleteCurrentBlock() {
+  if (!editingBlockId) return;
+  if (!confirm('Delete this block?')) return;
+  const day = getDay(editingBlockDate || selectedDate);
+  day.blocks = day.blocks.filter(b => b.id !== editingBlockId);
+  saveDay(editingBlockDate || selectedDate, day);
+  closeBlockModal();
+  renderSchedule();
+  showToast('Block deleted');
+}
+
+// ===================== EXPENSES =====================
+function renderExpenses() {
+  const d = dateKeyToDate(selectedDate);
+  document.getElementById('expDateLabel').textContent = DAY_FULL[d.getDay()];
+  document.getElementById('expDateSub').textContent = selectedDate;
+
+  const day = getDay(selectedDate);
+  const exp = day.expenses || { food: 0, cig: 0, misc: 0, entries: [] };
+
+  document.getElementById('catFood').value = exp.food || '';
+  document.getElementById('catCig').value = exp.cig || '';
+  document.getElementById('catMisc').value = exp.misc || '';
+
+  updateTotalDisplay(exp);
+  renderExpenseLog(exp.entries || []);
+  renderWeeklyBars();
+}
+
+function updateCatExpense(cat, val) {
+  const day = getDay(selectedDate);
+  if (!day.expenses) day.expenses = { food: 0, cig: 0, misc: 0, entries: [] };
+  day.expenses[cat] = parseFloat(val) || 0;
+  saveDay(selectedDate, day);
+  updateTotalDisplay(day.expenses);
+  renderWeeklyBars();
+}
+
+function updateTotalDisplay(exp) {
+  const catTotal = (exp.food || 0) + (exp.cig || 0) + (exp.misc || 0);
+  const entryTotal = (exp.entries || []).reduce((s, e) => s + (parseFloat(e.amt) || 0), 0);
+  const total = catTotal + entryTotal;
+  document.getElementById('expTotalNum').innerHTML = `₹${total.toFixed(0)} <span>/ day</span>`;
+}
+
+function renderExpenseLog(entries) {
+  const list = document.getElementById('expenseLogList');
+  list.innerHTML = '';
+  entries.forEach((entry, idx) => {
+    const row = document.createElement('div');
+    row.className = 'expense-entry';
+    row.innerHTML = `
+      <input class="expense-entry-desc" value="${escHtml(entry.desc || '')}" placeholder="Description..." oninput="updateExpenseEntry(${idx}, 'desc', this.value)">
+      <input class="expense-entry-amt" type="number" value="${entry.amt || ''}" placeholder="0" min="0" oninput="updateExpenseEntry(${idx}, 'amt', this.value)">
+      <button class="expense-entry-del" onclick="deleteExpenseEntry(${idx})">✕</button>`;
+    list.appendChild(row);
+  });
+}
+
+function addExpenseEntry() {
+  const day = getDay(selectedDate);
+  if (!day.expenses) day.expenses = { food: 0, cig: 0, misc: 0, entries: [] };
+  if (!day.expenses.entries) day.expenses.entries = [];
+  day.expenses.entries.push({ desc: '', amt: '' });
+  saveDay(selectedDate, day);
+  renderExpenseLog(day.expenses.entries);
+}
+
+function updateExpenseEntry(idx, field, val) {
+  const day = getDay(selectedDate);
+  if (!day.expenses || !day.expenses.entries) return;
+  day.expenses.entries[idx][field] = val;
+  saveDay(selectedDate, day);
+  updateTotalDisplay(day.expenses);
+  renderWeeklyBars();
+}
+
+function deleteExpenseEntry(idx) {
+  const day = getDay(selectedDate);
+  if (!day.expenses || !day.expenses.entries) return;
+  day.expenses.entries.splice(idx, 1);
+  saveDay(selectedDate, day);
+  renderExpenses();
+}
+
+function getDayTotal(dateKey) {
+  const day = getDay(dateKey);
+  const exp = day.expenses || {};
+  const catTotal = (exp.food || 0) + (exp.cig || 0) + (exp.misc || 0);
+  const entryTotal = (exp.entries || []).reduce((s, e) => s + (parseFloat(e.amt) || 0), 0);
+  return catTotal + entryTotal;
+}
+
+function renderWeeklyBars() {
+  const container = document.getElementById('weeklyBars');
+  container.innerHTML = '';
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+  const totals = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const key = d.toISOString().slice(0,10);
+    totals.push({ day: DAYS[d.getDay()], key, total: getDayTotal(key) });
+  }
+  const max = Math.max(...totals.map(t => t.total), 1);
+
+  totals.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'weekly-bar-row';
+    const pct = (t.total / max) * 100;
+    row.innerHTML = `
+      <div class="weekly-bar-day">${t.day}</div>
+      <div class="weekly-bar-track"><div class="weekly-bar-fill" style="width:${pct}%"></div></div>
+      <div class="weekly-bar-amt">₹${t.total.toFixed(0)}</div>`;
+    container.appendChild(row);
+  });
+}
+
+// ===================== REMINDERS =====================
+function renderReminders() {
+  const settings = getSettings();
+  document.getElementById('studyToggle').className = 'toggle' + (settings.studyReminders ? ' on' : '');
+  document.getElementById('windDownToggle').className = 'toggle' + (settings.windDown ? ' on' : '');
+  document.getElementById('busToggle').className = 'toggle' + (settings.busAlerts ? ' on' : '');
+
+  const day = ensureDayBlocks(selectedDate);
+  const list = document.getElementById('remindersList');
+  list.innerHTML = '';
+
+  // Custom reminders for today
+  const storage = getStorage();
+  const rems = (storage.reminders || {})[selectedDate] || [];
+  if (rems.length === 0) {
+    list.innerHTML = '<div class="empty-state" style="padding:12px 0"><div style="color:var(--text3);font-size:0.8rem">No custom reminders for today.</div></div>';
+  }
+  rems.forEach((r, idx) => {
+    const row = document.createElement('div');
+    row.className = 'reminder-row';
+    row.innerHTML = `
+      <div><div class="reminder-label">${escHtml(r.label)}</div><div class="reminder-time">${r.time}</div></div>
+      <button onclick="deleteReminder(${idx})" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.85rem">✕</button>`;
+    list.appendChild(row);
+  });
+}
+
+function toggleSetting(key, btn) {
+  const settings = getSettings();
+  settings[key] = !settings[key];
+  saveSettings(settings);
+  btn.className = 'toggle' + (settings[key] ? ' on' : '');
+  if (settings[key]) requestNotifPermission();
+  scheduleStudyReminders();
+}
+
+function openReminderModal() {
+  document.getElementById('reminderLabel').value = '';
+  document.getElementById('reminderTime').value = '';
+  document.getElementById('reminderModal').classList.add('open');
+  setTimeout(() => document.getElementById('reminderLabel').focus(), 100);
+}
+function closeReminderModal() {
+  document.getElementById('reminderModal').classList.remove('open');
+}
+function saveReminder() {
+  const label = document.getElementById('reminderLabel').value.trim();
+  const time = document.getElementById('reminderTime').value;
+  if (!label || !time) { showToast('Fill in both fields'); return; }
+
+  const s = getStorage();
+  if (!s.reminders) s.reminders = {};
+  if (!s.reminders[selectedDate]) s.reminders[selectedDate] = [];
+  s.reminders[selectedDate].push({ label, time });
+  saveStorage(s);
+  closeReminderModal();
+  renderReminders();
+  scheduleReminderNotif(label, time);
+  showToast('Reminder set ✓');
+}
+function deleteReminder(idx) {
+  const s = getStorage();
+  if (!s.reminders || !s.reminders[selectedDate]) return;
+  s.reminders[selectedDate].splice(idx, 1);
+  saveStorage(s);
+  renderReminders();
+}
+
+// ===================== NOTIFICATIONS =====================
+async function requestNotifPermission() {
+  if (!('Notification' in window)) { showToast('Notifications not supported'); return false; }
+  if (Notification.permission === 'granted') return true;
+  const p = await Notification.requestPermission();
+  const settings = getSettings();
+  settings.notifGranted = p === 'granted';
+  saveSettings(settings);
+  if (p !== 'granted') showToast('Please allow notifications in browser settings');
+  return p === 'granted';
+}
+
+function toggleNotifications() {
+  requestNotifPermission().then(granted => {
+    if (granted) {
+      showToast('Notifications enabled ✓');
+      document.getElementById('notifBtn').classList.add('active');
+      scheduleStudyReminders();
+      scheduleWindDown();
+    }
+  });
+}
+
+const scheduledTimers = [];
+function clearScheduled() { scheduledTimers.forEach(t => clearTimeout(t)); scheduledTimers.length = 0; }
+
+function scheduleStudyReminders() {
+  clearScheduled();
+  const settings = getSettings();
+  if (!settings.studyReminders && !settings.windDown && !settings.busAlerts) return;
+  if (Notification.permission !== 'granted') return;
+
+  const today = todayKey();
+  const now = new Date();
+  const day = getDay(today);
+
+  if (settings.studyReminders && day.blocks) {
+    day.blocks.filter(b => b.category === 'study' && b.start).forEach(b => {
+      const [h, m] = b.start.split(':').map(Number);
+      const notifTime = new Date(); notifTime.setHours(h, m - 10, 0, 0);
+      if (notifTime > now) {
+        const ms = notifTime - now;
+        const t = setTimeout(() => {
+          new Notification('📚 Study block starting soon', { body: b.label + ' in 10 minutes', icon: '' });
+        }, ms);
+        scheduledTimers.push(t);
+      }
+    });
+  }
+
+  if (settings.windDown) scheduleWindDown();
+  if (settings.busAlerts) scheduleBusAlerts();
+}
+
+function scheduleWindDown() {
+  const settings = getSettings();
+  if (!settings.windDown || Notification.permission !== 'granted') return;
+  const now = new Date();
+  const target = new Date(); target.setHours(22, 0, 0, 0);
+  if (target > now) {
+    const t = setTimeout(() => {
+      new Notification('🌙 Wind-down time', { body: 'Time to wrap up and rest. Great work today.' });
+    }, target - now);
+    scheduledTimers.push(t);
+  }
+}
+
+function scheduleBusAlerts() {
+  const settings = getSettings();
+  if (!settings.busAlerts || Notification.permission !== 'granted') return;
+  const now = new Date();
+  const dow = now.getDay();
+  const busTimes = dow === 2 ? ['07:15'] : (dow === 1 || dow === 3 || dow === 4 || dow === 5) ? ['08:15'] : [];
+  busTimes.forEach(bt => {
+    const [h, m] = bt.split(':').map(Number);
+    const t = new Date(); t.setHours(h, m - 15, 0, 0);
+    if (t > now) {
+      const ms2 = t - now;
+      const timer = setTimeout(() => {
+        new Notification('🚌 Bus in 15 minutes!', { body: `Bus departs at ${bt}. Don't miss it!` });
+      }, ms2);
+      scheduledTimers.push(timer);
+    }
+  });
+}
+
+function scheduleReminderNotif(label, time) {
+  if (Notification.permission !== 'granted') return;
+  const [h, m] = time.split(':').map(Number);
+  const now = new Date();
+  const target = new Date(); target.setHours(h, m, 0, 0);
+  if (target > now) {
+    const t = setTimeout(() => {
+      new Notification('🔔 ' + label, { body: 'Scheduled reminder' });
+    }, target - now);
+    scheduledTimers.push(t);
+  }
+}
+
+// ===================== TABS & NAV =====================
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['schedule','expenses','stats','reminders','settings'][i] === tab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'expenses') renderExpenses();
+  if (tab === 'reminders') renderReminders();
+  if (tab === 'stats') renderStats();
+}
+
+// ===================== DATA TOOLS =====================
+function exportData() {
+  const data = getStorage();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'climate-planner-' + todayKey() + '.json';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('Exported ✓');
+}
+
+function importData() {
+  document.getElementById('importFile').click();
+}
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!confirm('This will overwrite all current data. Continue?')) return;
+      localStorage.setItem('climatePlanner', JSON.stringify(data));
+      showToast('Imported ✓ — reloading');
+      setTimeout(() => location.reload(), 800);
+    } catch { showToast('Invalid JSON file'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function resetToTemplates() {
+  if (!confirm('Reset this entire week to default templates? Custom edits will be lost.')) return;
+  const today = new Date();
+  const dow = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const key = d.toISOString().slice(0,10);
+    const day = getDay(key);
+    day.blocks = getTemplateForDate(key);
+    saveDay(key, day);
+  }
+  renderSchedule();
+  showToast('Week reset to templates ✓');
+}
+
+function clearAll() {
+  localStorage.removeItem('climatePlanner');
+  location.reload();
+}
+
+// ===================== UTILS =====================
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ===================== STATS =====================
+let statRangeDays = 7;
+let chartStudyInst = null, chartSpendInst = null, chartCatInst = null, chartExpInst = null;
+
+function setStatRange(days, btn) {
+  statRangeDays = days;
+  document.querySelectorAll('.stat-range-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderStats();
+}
+
+function getDateRange(days) {
+  const dates = [];
+  const today = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    dates.push(d.toISOString().slice(0, 10));
+  }
+  return dates;
+}
+
+function blockDuration(block) {
+  if (!block.start || !block.end) return 0;
+  const [sh, sm] = block.start.split(':').map(Number);
+  const [eh, em] = block.end.split(':').map(Number);
+  const mins = (eh * 60 + em) - (sh * 60 + sm);
+  return mins > 0 ? mins : 0;
+}
+
+function renderStats() {
+  if (typeof Chart === 'undefined') {
+    // Chart.js not loaded yet — will retry after load
+    return;
+  }
+
+  const dates = getDateRange(statRangeDays);
+  const storage = getStorage();
+  const days = storage.days || {};
+
+  // --- Aggregate data ---
+  let totalStudyMins = 0, totalClassMins = 0, totalSpend = 0, daysWithData = 0;
+  const studyByDay = [], spendByDay = [], labels = [];
+  const catMins = { class: 0, study: 0, commute: 0, meal: 0, admin: 0, practica: 0, free: 0, sleep: 0, other: 0 };
+  const expCats = { food: 0, cig: 0, misc: 0, entries: 0 };
+
+  dates.forEach(dateKey => {
+    const d = dateKeyToDate(dateKey);
+    const dd = d.getDate();
+    const mo = d.toLocaleDateString('en-IN', { month: 'short' });
+    labels.push(statRangeDays <= 7 ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()] : (dd + '/' + (d.getMonth()+1)));
+
+    const dayData = days[dateKey];
+    if (!dayData) {
+      studyByDay.push(0);
+      spendByDay.push(0);
+      return;
+    }
+    daysWithData++;
+
+    // blocks
+    let dayStudy = 0;
+    (dayData.blocks || []).forEach(b => {
+      if (!b.done) return; // only count completed blocks
+      const dur = blockDuration(b);
+      const cat = b.category || 'other';
+      if (cat === 'study') { dayStudy += dur; totalStudyMins += dur; }
+      if (cat === 'class') totalClassMins += dur;
+      if (catMins[cat] !== undefined) catMins[cat] += dur;
+      else catMins.other += dur;
+    });
+    studyByDay.push(Math.round((dayStudy / 60) * 10) / 10);
+
+    // expenses
+    const exp = dayData.expenses || {};
+    const food = parseFloat(exp.food) || 0;
+    const cig = parseFloat(exp.cig) || 0;
+    const misc = parseFloat(exp.misc) || 0;
+    const entryTotal = (exp.entries || []).reduce((s, e) => s + (parseFloat(e.amt) || 0), 0);
+    const dayTotal = food + cig + misc + entryTotal;
+    spendByDay.push(Math.round(dayTotal));
+    totalSpend += dayTotal;
+    expCats.food += food;
+    expCats.cig += cig;
+    expCats.misc += misc;
+    expCats.entries += entryTotal;
+  });
+
+  const avgStudy = daysWithData > 0 ? totalStudyMins / daysWithData : 0;
+  const avgSpend = daysWithData > 0 ? totalSpend / daysWithData : 0;
+  const totalStudyHrs = (totalStudyMins / 60);
+
+  // compute completion rate
+  let totalBlocks = 0, doneBlocks = 0;
+  dates.forEach(dateKey => {
+    const dayData = (storage.days || {})[dateKey];
+    if (!dayData || !dayData.blocks) return;
+    totalBlocks += dayData.blocks.length;
+    doneBlocks += dayData.blocks.filter(b => b.done).length;
+  });
+  const completionPct = totalBlocks > 0 ? Math.round((doneBlocks / totalBlocks) * 100) : 0;
+
+  // --- KPIs ---
+  document.getElementById('statKpiGrid').innerHTML = `
+    <div class="stat-kpi">
+      <div class="stat-kpi-label">Completed study</div>
+      <div class="stat-kpi-value">${totalStudyHrs.toFixed(1)}<span style="font-size:0.9rem;font-family:'Outfit',sans-serif;color:var(--text2)">h</span></div>
+      <div class="stat-kpi-sub">marked done in ${statRangeDays}d</div>
+    </div>
+    <div class="stat-kpi">
+      <div class="stat-kpi-label">Avg study/day</div>
+      <div class="stat-kpi-value">${(avgStudy/60).toFixed(1)}<span style="font-size:0.9rem;font-family:'Outfit',sans-serif;color:var(--text2)">h</span></div>
+      <div class="stat-kpi-sub">target: 3–4h</div>
+    </div>
+    <div class="stat-kpi">
+      <div class="stat-kpi-label">Completion rate</div>
+      <div class="stat-kpi-value" style="color:${completionPct>=70?'#6ee7b7':completionPct>=40?'#fbbf24':'#f87171'}">${completionPct}<span style="font-size:0.9rem;font-family:'Outfit',sans-serif;color:var(--text2)">%</span></div>
+      <div class="stat-kpi-sub">${doneBlocks}/${totalBlocks} blocks done</div>
+    </div>
+    <div class="stat-kpi">
+      <div class="stat-kpi-label">Avg spend/day</div>
+      <div class="stat-kpi-value" style="font-size:1.2rem">₹${Math.round(avgSpend).toLocaleString('en-IN')}</div>
+      <div class="stat-kpi-sub">total ₹${Math.round(totalSpend).toLocaleString('en-IN')}</div>
+    </div>`;
+
+  const CHART_GRID = '#2e3550';
+  const CHART_TEXT = '#9aa3c0';
+
+  // --- Study chart ---
+  const studyCtx = document.getElementById('chartStudy').getContext('2d');
+  if (chartStudyInst) chartStudyInst.destroy();
+  chartStudyInst = new Chart(studyCtx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Study hrs',
+        data: studyByDay,
+        backgroundColor: studyByDay.map(v => v >= 3 ? '#6ee7b7' : v >= 1 ? '#a78bfa' : '#2e3550'),
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.parsed.y + 'h' } } },
+      scales: {
+        x: { ticks: { color: CHART_TEXT, font: { size: 10 }, autoSkip: false, maxRotation: 0 }, grid: { color: 'transparent' }, border: { color: CHART_GRID } },
+        y: { ticks: { color: CHART_TEXT, font: { size: 10 }, callback: v => v + 'h' }, grid: { color: CHART_GRID }, border: { color: 'transparent' }, beginAtZero: true }
+      }
+    }
+  });
+  document.getElementById('statStudyLegend').innerHTML = `
+    <span class="stat-legend-item"><span class="stat-legend-dot" style="background:#6ee7b7"></span>3h+ (on track)</span>
+    <span class="stat-legend-item"><span class="stat-legend-dot" style="background:#a78bfa"></span>1–3h (light)</span>
+    <span class="stat-legend-item"><span class="stat-legend-dot" style="background:#2e3550"></span>No data</span>`;
+
+  // --- Spend chart ---
+  const spendCtx = document.getElementById('chartSpend').getContext('2d');
+  if (chartSpendInst) chartSpendInst.destroy();
+  chartSpendInst = new Chart(spendCtx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: '₹ spent',
+        data: spendByDay,
+        borderColor: '#fb923c',
+        backgroundColor: 'rgba(251,146,60,0.08)',
+        fill: true,
+        tension: 0.35,
+        pointRadius: 3,
+        pointBackgroundColor: '#fb923c',
+        borderWidth: 2,
+        borderDash: [],
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => '₹' + ctx.parsed.y } } },
+      scales: {
+        x: { ticks: { color: CHART_TEXT, font: { size: 10 }, autoSkip: statRangeDays > 14, maxRotation: 0 }, grid: { color: 'transparent' }, border: { color: CHART_GRID } },
+        y: { ticks: { color: CHART_TEXT, font: { size: 10 }, callback: v => '₹' + v }, grid: { color: CHART_GRID }, border: { color: 'transparent' }, beginAtZero: true }
+      }
+    }
+  });
+
+  // --- Completion rate bars ---
+  const compContainer = document.getElementById('statCompletionBars');
+  compContainer.innerHTML = '';
+  dates.forEach((dateKey, i) => {
+    const dayData = (storage.days || {})[dateKey];
+    const total = dayData && dayData.blocks ? dayData.blocks.length : 0;
+    const done = dayData && dayData.blocks ? dayData.blocks.filter(b => b.done).length : 0;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const fillColor = pct >= 70 ? '#6ee7b7' : pct >= 40 ? '#fbbf24' : pct > 0 ? '#f87171' : '#2e3550';
+    const row = document.createElement('div');
+    row.className = 'stat-completion-row';
+    row.innerHTML = `
+      <div class="stat-completion-day">${labels[i]}</div>
+      <div class="stat-completion-track"><div class="stat-completion-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+      <div class="stat-completion-pct">${total > 0 ? pct + '%' : '—'}</div>`;
+    compContainer.appendChild(row);
+  });
+
+  // --- Category donut ---
+  const catEntries = Object.entries(catMins).filter(([,v]) => v > 0);
+  const catColors = { class:'#60a5fa', study:'#6ee7b7', commute:'#fb923c', meal:'#fbbf24', admin:'#a78bfa', practica:'#f472b6', free:'#94a3b8', sleep:'#818cf8', other:'#6b7280' };
+  const catLabels = { class:'Class', study:'Study', commute:'Commute', meal:'Meal', admin:'Admin', practica:'Practica', free:'Free', sleep:'Sleep', other:'Other' };
+
+  const catCtx = document.getElementById('chartCat').getContext('2d');
+  if (chartCatInst) chartCatInst.destroy();
+  if (catEntries.length > 0) {
+    chartCatInst = new Chart(catCtx, {
+      type: 'doughnut',
+      data: {
+        labels: catEntries.map(([k]) => catLabels[k] || k),
+        datasets: [{ data: catEntries.map(([,v]) => Math.round(v/60*10)/10), backgroundColor: catEntries.map(([k]) => catColors[k] || '#6b7280'), borderWidth: 0, hoverOffset: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '68%',
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.label + ': ' + ctx.parsed + 'h' } } }
+      }
+    });
+    document.getElementById('statCatLegend').innerHTML = catEntries.map(([k,v]) =>
+      `<span class="stat-legend-item"><span class="stat-legend-dot" style="background:${catColors[k]}"></span>${catLabels[k]} ${(v/60).toFixed(1)}h</span>`
+    ).join('');
+  } else {
+    document.getElementById('statCatLegend').innerHTML = '<span style="color:var(--text3);font-size:0.78rem">No data yet</span>';
+  }
+
+  // --- Expense donut ---
+  const expEntries = [['Food', expCats.food, '#fbbf24'], ['Cigarettes', expCats.cig, '#f472b6'], ['Misc', expCats.misc, '#a78bfa'], ['Other entries', expCats.entries, '#60a5fa']].filter(([,v]) => v > 0);
+  const expCtx = document.getElementById('chartExpCat').getContext('2d');
+  if (chartExpInst) chartExpInst.destroy();
+  if (expEntries.length > 0) {
+    chartExpInst = new Chart(expCtx, {
+      type: 'doughnut',
+      data: {
+        labels: expEntries.map(([l]) => l),
+        datasets: [{ data: expEntries.map(([,v]) => Math.round(v)), backgroundColor: expEntries.map(([,,c]) => c), borderWidth: 0, hoverOffset: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '68%',
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ctx.label + ': ₹' + ctx.parsed } } }
+      }
+    });
+    document.getElementById('statExpLegend').innerHTML = expEntries.map(([l,v,c]) =>
+      `<span class="stat-legend-item"><span class="stat-legend-dot" style="background:${c}"></span>${l} ₹${Math.round(v)}</span>`
+    ).join('');
+  } else {
+    document.getElementById('statExpLegend').innerHTML = '<span style="color:var(--text3);font-size:0.78rem">No data yet</span>';
+  }
+
+  // --- Heatmap (28 days) ---
+  renderHeatmap(storage);
+}
+
+function renderHeatmap(storage) {
+  const container = document.getElementById('statHeatmap');
+  const today = new Date();
+  const days28 = [];
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    days28.push({ key: d.toISOString().slice(0,10), dow: d.getDay() });
+  }
+  const daySt = storage.days || {};
+
+  function cellIntensity(dateKey) {
+    const d = daySt[dateKey];
+    if (!d || !d.blocks) return 0;
+    const studyMins = d.blocks.filter(b => b.category === 'study' && b.done).reduce((s,b) => s + blockDuration(b), 0);
+    if (studyMins >= 180) return 4;
+    if (studyMins >= 120) return 3;
+    if (studyMins >= 60) return 2;
+    if (studyMins > 0) return 1;
+    return 0;
+  }
+
+  const intensityColors = ['#1a1f2e', '#1e4d38', '#166534', '#15803d', '#6ee7b7'];
+
+  // Build 4-week grid (7 cols = Mon–Sun, 4 rows = weeks)
+  // Pad so Monday is first
+  const firstDow = days28[0].dow; // 0=Sun
+  const padBefore = firstDow === 0 ? 6 : firstDow - 1; // days to pad to align Monday
+  const cells = Array(padBefore).fill(null).concat(days28);
+
+  let html = `<div class="heatmap-grid">
+    <div></div>
+    ${['M','T','W','T','F','S','S'].map(d => `<div class="heatmap-col-label">${d}</div>`).join('')}`;
+
+  for (let i = 0; i < cells.length; i++) {
+    if (i % 7 === 0) {
+      const weekNum = Math.floor(i / 7) + 1;
+      html += `<div class="heatmap-day-label">W${weekNum}</div>`;
+    }
+    const cell = cells[i];
+    if (!cell) {
+      html += `<div class="heatmap-cell" style="background:transparent"></div>`;
+    } else {
+      const intensity = cellIntensity(cell.key);
+      const isToday = cell.key === todayKey();
+      html += `<div class="heatmap-cell" style="background:${intensityColors[intensity]};${isToday ? 'outline:1px solid #6ee7b7;' : ''}" title="${cell.key}: ${intensity === 0 ? 'No study' : ['<1h','1h+','2h+','3h+'][intensity-1]}"></div>`;
+    }
+  }
+
+  html += `</div>
+  <div class="heatmap-legend">
+    <span>Less</span>
+    <div class="heatmap-legend-cells">
+      ${intensityColors.map(c => `<div class="heatmap-legend-cell" style="background:${c}"></div>`).join('')}
+    </div>
+    <span>More study</span>
+  </div>`;
+  container.innerHTML = html;
+}
+
+// Load Chart.js and render stats when ready
+(function loadChartJS() {
+  if (typeof Chart !== 'undefined') return;
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
+  s.onload = () => { if (document.getElementById('tab-stats').classList.contains('active')) renderStats(); };
+  document.head.appendChild(s);
+})();
+function init() {
+  selectedDate = todayKey();
+  buildWeekStrip();
+  renderSchedule();
+  scheduleStudyReminders();
+
+  // Apply saved settings
+  const settings = getSettings();
+  if (settings.notifGranted || Notification.permission === 'granted') {
+    document.getElementById('notifBtn').classList.add('active');
+  }
+
+  // Close modals on overlay click
+  document.getElementById('blockModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeBlockModal(); });
+  document.getElementById('reminderModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeReminderModal(); });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+<!-- ====================================================
+     INTERACTIVITY ENHANCEMENTS
+     Ripple taps · Scroll bar · Done pulse · Toast
+     ==================================================== -->
+<script>
+(function initInteractivity() {
+
+  /* ── Scroll progress bar ── */
+  const bar = document.getElementById('scroll-progress');
+  window.addEventListener('scroll', () => {
+    const scrolled = window.scrollY;
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    bar.style.width = total > 0 ? (scrolled / total * 100) + '%' : '0%';
+  }, { passive: true });
+
+  /* ── Toast helper ── */
+  let toastTimer;
+  function showToast(msg, duration = 1800) {
+    const t = document.getElementById('interactive-toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), duration);
+  }
+
+  /* ── Ripple on tap for key elements ── */
+  function attachRipple(el) {
+    el.style.position = 'relative';
+    el.style.overflow = 'hidden';
+    el.addEventListener('pointerdown', function(e) {
+      const rect = el.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height) * 1.6;
+      const wave = document.createElement('span');
+      wave.className = 'ripple-wave';
+      wave.style.cssText = `
+        width:${size}px; height:${size}px;
+        left:${e.clientX - rect.left - size/2}px;
+        top:${e.clientY - rect.top - size/2}px;
+      `;
+      el.appendChild(wave);
+      wave.addEventListener('animationend', () => wave.remove());
+    });
+  }
+
+  function applyRipples() {
+    document.querySelectorAll(
+      '.icon-btn, .day-pill, .tab, .add-block-btn, #pwa-install-btn, .block-actions button'
+    ).forEach(attachRipple);
+  }
+
+  /* ── Done-block pulse ── */
+  function watchDoneToggles() {
+    document.addEventListener('click', e => {
+      const doneBtn = e.target.closest('[onclick*="toggleDone"], [data-action="done"]');
+      const block = e.target.closest('.block');
+      if (doneBtn && block) {
+        block.classList.add('just-done');
+        setTimeout(() => block.classList.remove('just-done'), 600);
+        const label = block.querySelector('.block-label');
+        const isDone = block.querySelector('.block-done-check')?.classList.contains('checked')
+                    || block.style.opacity === '0.5';
+        showToast(isDone ? '✓ Marked complete' : '↩ Marked incomplete');
+      }
+    });
+  }
+
+  /* ── Tab switch toast ── */
+  const tabMessages = {
+    'tab-schedule': '📅 Schedule',
+    'tab-reminders': '🔔 Reminders',
+    'tab-expenses': '💸 Expenses',
+    'tab-stats': '📊 Stats',
+  };
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const id = tab.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+      if (id && tabMessages[id]) showToast(tabMessages[id], 1200);
+    });
+  });
+
+  /* ── Day pill tap feedback ── */
+  document.querySelectorAll('.day-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const name = pill.querySelector('.day-name')?.textContent || '';
+      const num  = pill.querySelector('.day-num')?.textContent || '';
+      if (name && num) showToast(`${name} ${num}`);
+    });
+  });
+
+  /* ── Re-apply ripples after dynamic renders (MutationObserver) ── */
+  const observer = new MutationObserver(() => applyRipples());
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Initial apply
+  applyRipples();
+  watchDoneToggles();
+
+})();
+</script>
+
+     All inline: no external files needed
+     ==================================================== -->
+<script>
+(function initPWA() {
+  /* ── 1. Generate app icon via Canvas ── */
+  function drawIcon(size) {
+    const c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    const ctx = c.getContext('2d');
+    // Background
+    const r = size * 0.18;
+    ctx.beginPath();
+    ctx.moveTo(r, 0);
+    ctx.lineTo(size - r, 0);
+    ctx.quadraticCurveTo(size, 0, size, r);
+    ctx.lineTo(size, size - r);
+    ctx.quadraticCurveTo(size, size, size - r, size);
+    ctx.lineTo(r, size);
+    ctx.quadraticCurveTo(0, size, 0, size - r);
+    ctx.lineTo(0, r);
+    ctx.quadraticCurveTo(0, 0, r, 0);
+    ctx.closePath();
+    ctx.fillStyle = '#1a1f2e';
+    ctx.fill();
+    // Accent border glow
+    ctx.strokeStyle = '#6ee7b7';
+    ctx.lineWidth = size * 0.04;
+    ctx.stroke();
+    // Calendar grid icon
+    const pad = size * 0.18;
+    const w = size - pad * 2;
+    const h = size - pad * 2;
+    // Header bar
+    ctx.fillStyle = '#6ee7b7';
+    ctx.fillRect(pad, pad, w, h * 0.28);
+    // Body
+    ctx.fillStyle = '#222840';
+    ctx.fillRect(pad, pad + h * 0.28, w, h * 0.72);
+    // Grid lines
+    ctx.strokeStyle = '#2e3550';
+    ctx.lineWidth = size * 0.02;
+    for (let i = 1; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(pad + w * i / 3, pad + h * 0.28);
+      ctx.lineTo(pad + w * i / 3, pad + h);
+      ctx.stroke();
+    }
+    for (let j = 1; j < 3; j++) {
+      ctx.beginPath();
+      ctx.moveTo(pad, pad + h * 0.28 + h * 0.72 * j / 3);
+      ctx.lineTo(pad + w, pad + h * 0.28 + h * 0.72 * j / 3);
+      ctx.stroke();
+    }
+    // Dots in grid cells
+    const dotColor = '#6ee7b7';
+    const cols = 3, rows = 3;
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (row === 0 && col === 0) continue; // skip first cell
+        const cx2 = pad + (col + 0.5) * (w / cols);
+        const cy2 = pad + h * 0.28 + (row + 0.5) * (h * 0.72 / rows);
+        ctx.beginPath();
+        ctx.arc(cx2, cy2, size * 0.04, 0, Math.PI * 2);
+        ctx.fillStyle = (row + col) % 2 === 0 ? dotColor : '#a78bfa';
+        ctx.fill();
+      }
+    }
+    // "P" letter in header
+    ctx.fillStyle = '#0f1219';
+    ctx.font = `bold ${size * 0.2}px DM Serif Display, serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('P', size / 2, pad + h * 0.14);
+    return c;
+  }
+
+  // Draw mini icon in banner
+  const bannerCanvas = document.getElementById('pwa-banner-icon');
+  if (bannerCanvas) {
+    const tmp = drawIcon(44);
+    const ctx = bannerCanvas.getContext('2d');
+    ctx.drawImage(tmp, 0, 0);
+  }
+
+  // Generate icon data URLs for manifest
+  const icon192 = drawIcon(192).toDataURL('image/png');
+  const icon512 = drawIcon(512).toDataURL('image/png');
+
+  /* ── 2. Inject Web App Manifest via blob URL ── */
+  const manifest = {
+    name: 'Climate Scholar — Daily Planner',
+    short_name: 'MyPlanner',
+    description: 'A daily schedule & expense planner for climate scholars.',
+    start_url: './',
+    display: 'standalone',
+    orientation: 'portrait-primary',
+    background_color: '#0f1219',
+    theme_color: '#1a1f2e',
+    categories: ['productivity', 'education'],
+    icons: [
+      { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+      { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+    ]
+  };
+  const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+  const manifestURL = URL.createObjectURL(manifestBlob);
+  const manifestLink = document.getElementById('pwa-manifest');
+  if (manifestLink) manifestLink.href = manifestURL;
+
+  /* ── 3. Register Service Worker via blob URL ── */
+  const swCode = `
+const CACHE = 'myplanner-v1';
+const OFFLINE_URLS = [location.href];
+
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(cache =>
+      cache.addAll(OFFLINE_URLS).catch(() => {})
+    ).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    ).then(() => clients.claim())
+  );
+});
+
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  e.respondWith(
+    fetch(e.request)
+      .then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(cache => cache.put(e.request, clone));
+        return res;
+      })
+      .catch(() => caches.match(e.request))
+  );
+});
+`;
+
+  if ('serviceWorker' in navigator) {
+    const swBlob = new Blob([swCode], { type: 'application/javascript' });
+    const swURL = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swURL, { scope: './' })
+      .then(reg => console.log('[PWA] SW registered', reg.scope))
+      .catch(err => console.warn('[PWA] SW registration failed:', err));
+  }
+
+  /* ── 4. Install Prompt (Android Chrome) ── */
+  let deferredPrompt = null;
+  const banner  = document.getElementById('pwa-install-banner');
+  const installBtn = document.getElementById('pwa-install-btn');
+  const dismissBtn = document.getElementById('pwa-dismiss-btn');
+  const toast   = document.getElementById('pwa-installed-toast');
+
+  // Don't show if user dismissed before
+  const dismissed = sessionStorage.getItem('pwa-dismissed');
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!dismissed && banner) {
+      setTimeout(() => { banner.style.display = 'block'; }, 1200);
+    }
+  });
+
+  if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      banner.style.display = 'none';
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 3000);
+      }
+      deferredPrompt = null;
+    });
+  }
+
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', () => {
+      banner.style.display = 'none';
+      sessionStorage.setItem('pwa-dismissed', '1');
+    });
+  }
+
+  window.addEventListener('appinstalled', () => {
+    banner.style.display = 'none';
+    deferredPrompt = null;
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+  });
+})();
+</script>
+</body>
+</html>
